@@ -1,0 +1,96 @@
+def hangman():
+
+    import random
+    import requests
+
+    already_guessed = []
+
+    def word_choice():
+
+        website = "https://www.mit.edu/~ecprice/wordlist.10000" # This site is just a list of loads of words
+        words = requests.get(website) # Retrieves those words
+        l = words.content.splitlines() # Formats (into list?)
+        choice = str(random.choice(l)) # Picks random word
+
+        choice_list = []
+        global unknown # So can refer to in later functions
+        unknown = []
+        for i in range(2, len(choice) - 1): # Weird indexing because choice had ' and stuff
+            choice_list.append(choice[i]) # Converts choice into list, easier to  work with
+            unknown.append("_")
+
+        if 3 < len(choice_list) < 8:   
+            print("\n", " ".join(unknown)) # Outputs as the prettier string
+            return choice_list # Returns (but doesn't reveal) correct ans.
+        else:
+            word_choice() # Try again
+
+    global choice_list # So can refer to in later functions
+    choice_list = word_choice()
+    global lives # So can refer to in later functions
+    lives = 9
+    print("\n Choose wisely! You are permitted just nine errors before the hangman arrives!")
+
+    def lives_word_form(lives): # Converts numeral to word form, aesthetic reasons
+        if lives == 8:
+            return "eight"
+        elif lives == 7:
+            return "seven"
+        elif lives == 6:
+            return "six"
+        elif lives == 5:
+            return "five"
+        elif lives == 4:
+            return "four"
+        elif lives == 3:
+            return "three"
+        elif lives == 2:
+            return "two"
+        elif lives == 1:
+            return "one"
+        elif lives == 0:
+            return "zero"
+
+    def guess_to_list(guess):
+        guess_list = []
+        for i in range(0, len(guess)):
+            guess_list.append(guess[i])
+        return guess_list
+
+    def letter_guess():
+        
+        global lives
+        guess = input("\n Your guess:")
+
+        if guess in already_guessed: # If user has already tried that letter
+            print("\n Fool! You've tried that already!")
+            letter_guess()
+
+        elif len(guess) > 1: # If invalid input
+            print("\n The hangman decrees you must guess a letter at a time. Try again!")
+            letter_guess()
+
+        elif guess.lower() in choice_list: # If correct letter, capitalised or no
+
+            for i in range(0, len(choice_list)): # Scans through choice_list to find that correct letter
+                if guess.lower() == choice_list[i]:
+                    unknown[i] = guess.lower() # Changes _ to guessed letter
+                    already_guessed.append(guess.lower())
+
+            print("\n", " ".join(unknown)) # Tells user location of their guesses so far
+
+            if unknown == choice_list: # If user wins
+                print("\n The hangman howls in frustration as you once again cheat death. Well done!")
+            else: # If user hasn't won yet
+                letter_guess() # Recursive
+
+        else: # If wrong guess
+            lives = lives - 1
+            if lives == 0: # If user loses
+                print("\n Crack! You lose! You wanted:", "".join(choice_list))
+            else: # If user hasn't lost yet
+                print("\n The noose tightens... Remaining:", lives_word_form(lives))
+                already_guessed.append(guess.lower())
+                letter_guess()
+    
+    letter_guess()
